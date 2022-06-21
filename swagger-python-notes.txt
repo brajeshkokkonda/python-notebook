@@ -1,0 +1,102 @@
+pip install virtualenv
+mkdir hello_flask
+cd hello_flask
+python -m venv .venv
+.venv\scripts\activate
+python -m pip install --upgrade pip
+python -m pip install flask
+#---app.py----
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello, Flask!"
+--------------
+python -m flask run
+[Ctrl+C]
+python -m pip install flask-restplus
+-----------
+python -m pip install flasgger
+#--app.py----
+from flask import Flask, request
+from flasgger import Swagger, LazyString, LazyJSONEncoder
+from flasgger import swag_from
+
+app = Flask(__name__)
+app.json_encoder = LazyJSONEncoder
+swagger_template = dict(
+info = {
+    'title': LazyString(lambda: 'My first Swagger UI document'),
+    'version': LazyString(lambda: '0.1'),
+    'description': LazyString(lambda: 'This document depicts a      sample Swagger UI document and implements Hello World functionality after executing GET.'),
+    },
+    host = LazyString(lambda: request.host)
+)
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'hello_world',
+            "route": '/hello_world.json',
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/apidocs/"
+}
+
+swagger = Swagger(app, template=swagger_template, config=swagger_config)
+
+@swag_from("hello_world.yml", methods=['GET'])
+@app.route("/")
+def hello_world():
+    return "Hello World!!!"
+
+if __name__ == '__main__':
+    app.run()
+------------------------
+#---hello_world.yml----
+openapi: 3.0.0
+tags:
+  - name: Hello World
+get:
+  
+  description: None
+responses:
+    '200':
+      description: Successful response
+    '400':
+      description: Bad Request
+    '500':
+      description: Internal Server Error
+----------------
+python -m flask run
+http://localhost:5000/apidocs/
+[Worked!]
+https://github.com/flasgger/flasgger
+=======================
+python -m pip install fastapi
+python -m pip install "uvicorn[standard]"
+#---main.py----
+from typing import Union
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: Union[str, None] = None):
+    return {"item_id": item_id, "q": q}
+---------------
+uvicorn main:app --reload
+http://127.0.0.1:8000/docs
+[Worked!]
